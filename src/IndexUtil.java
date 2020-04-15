@@ -8,14 +8,20 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class IndexUtil {
-    public static void createIndex(String directoryPath) {
-        Map<String, List<Map.Entry<String, Integer>>> index = generateIndex("D:/Projektek/IET/corpus");
-        saveIndex(index);
+    private Map<String, List<Map.Entry<String, Integer>>> index;
+
+    public IndexUtil() {
+        index = new HashMap<>();
     }
 
-    private static Map<String, List<Map.Entry<String, Integer>>> generateIndex(String directoryPath) {
+    public void createIndex(String directoryPath) {
+        generateIndex("D:/Projektek/IET/corpus");
+        saveIndex();
+    }
+
+    private void generateIndex(String directoryPath) {
         TermRecognizer tr;
-        Map<String, List<Map.Entry<String, Integer>>> index = new HashMap<>();
+        Map<String, List<Map.Entry<String, Integer>>> generatedIndex = new HashMap<>();
         try {
             tr = new TermRecognizer();
             List<File> files = new ArrayList<>();
@@ -26,20 +32,20 @@ public class IndexUtil {
                 Map<String, Integer> terms = tr.termFrequency(fileText);
 
                 for (String word : terms.keySet()) {
-                    if (!index.containsKey(word.toLowerCase())) {
-                        index.put(word.toLowerCase(), new ArrayList<Map.Entry<String, Integer>>());
+                    if (!generatedIndex.containsKey(word.toLowerCase())) {
+                        generatedIndex.put(word.toLowerCase(), new ArrayList<Map.Entry<String, Integer>>());
                     }
-                    List<Map.Entry<String, Integer>> indexList = index.get(word.toLowerCase());
+                    List<Map.Entry<String, Integer>> indexList = generatedIndex.get(word.toLowerCase());
                     indexList.add(new AbstractMap.SimpleEntry<String, Integer>(fileName, terms.get(word)));
                 }
             }
+            index = generatedIndex;
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-        return index;
     }
 
-    private static void saveIndex(Map<String, List<Map.Entry<String, Integer>>> index) {
+    private void saveIndex() {
         try (PrintWriter printWriter = new PrintWriter("index.txt", "UTF-8")) {
             for (String word : index.keySet()) {
                 printWriter.print(word + " ");
@@ -52,7 +58,24 @@ public class IndexUtil {
         }
     }
 
-    private static List<File> getFiles(List<File> files, Path directoryPath) {
+    public void loadIndex() {
+        Map<String, List<Map.Entry<String, Integer>>> loadedIndex = new HashMap<>();
+        try {
+            Scanner scanner = new Scanner(new File("index.txt"));
+            while (scanner.hasNextLine()) {
+                String[] line = scanner.nextLine().split(" ");
+                List<Map.Entry<String, Integer>> frequencies = new ArrayList<>();
+                for (int i = 1; i < line.length; i += 2)
+                    frequencies.add(new AbstractMap.SimpleEntry<String, Integer>(line[i], Integer.parseInt(line[i + 1])));
+                loadedIndex.put(line[0], frequencies);
+            }
+            index= loadedIndex;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private List<File> getFiles(List<File> files, Path directoryPath) {
         try(DirectoryStream<Path> stream = Files.newDirectoryStream(directoryPath)) {
             for (Path path : stream) {
                 if(path.toFile().isDirectory()) {
@@ -65,5 +88,9 @@ public class IndexUtil {
             e.printStackTrace();
         }
         return files;
+    }
+
+    public Map<String, List<Map.Entry<String, Integer>>> getIndex() {
+        return index;
     }
 }
