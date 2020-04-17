@@ -15,7 +15,7 @@ public class IndexUtil {
     }
 
     public void createIndex(String directoryPath) {
-        generateIndex("D:/Projektek/IET/corpus");
+        generateIndex("D:/Projektek/IET/1. Hf/corpus");
         saveIndex();
     }
 
@@ -88,6 +88,17 @@ public class IndexUtil {
             e.printStackTrace();
         }
         return files;
+    }
+
+    public boolean isContainedInDocument(String keyWord, String documentName) {
+        List<Map.Entry<String, Integer>> entries = index.get(keyWord.toLowerCase());
+        if (entries != null) {
+            for (Map.Entry<String, Integer> entry : entries) {
+                if (entry.getKey().equals(documentName))
+                    return true;
+            }
+        }
+        return false;
     }
 
     public Map<String, List<Map.Entry<String, Integer>>> getIndex() {
